@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caos Visual Generativo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+
+        .controls button {
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .controls button:hover {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .controls button.active {
+            background: #ff0080;
+            border-color: #ff0080;
+            color: white;
+        }
+
+        #canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .glitch-text {
+            position: absolute;
+            font-size: 12px;
+            color: #00ff00;
+            font-weight: bold;
+            pointer-events: none;
+            animation: glitch 0.1s infinite;
+        }
+
+        @keyframes glitch {
+            0% {
+                transform: translate(0);
+            }
+
+            20% {
+                transform: translate(-2px, 2px);
+            }
+
+            40% {
+                transform: translate(-2px, -2px);
+            }
+
+            60% {
+                transform: translate(2px, 2px);
+            }
+
+            80% {
+                transform: translate(2px, -2px);
+            }
+
+            100% {
+                transform: translate(0);
+            }
+        }
+
+        @keyframes rainbow {
+            0% {
+                filter: hue-rotate(0deg);
+            }
+
+            100% {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        .rainbow {
+            animation: rainbow 2s infinite linear;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="controls">
+            <h3>🌀 GENERADOR DE CAOS VISUAL 🌀</h3>
+            <button onclick="startParticleStorm()">Tormenta de Partículas</button>
+            <button onclick="startFractalChaos()">Caos Fractal</button>
+            <button onclick="startMatrixRain()">Lluvia Matrix</button>
+            <button onclick="startPsychedelicWaves()">Ondas Psicodélicas</button>
+            <button onclick="startGlitchArt()">Arte Glitch</button>
+            <button onclick="startNeonSpiral()">Espiral Neón</button>
+            <button onclick="clearChaos()">Limpiar</button>
+        </div>
+
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let animationId;
+        let particles = [];
+        let time = 0;
+        let activeEffect = null;
+
+        // Utilidades
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function randomColor() {
+            return `hsl(${random(0, 360)}, 100%, 50%)`;
+        }
+
+        function clearChaos() {
+            if (animationId) cancelAnimationFrame(animationId);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = [];
+            document.querySelectorAll('.particle, .glitch-text').forEach(el => el.remove());
+            activeEffect = null;
+        }
+
+        // Efecto 1: Tormenta de Partículas
+        function startParticleStorm() {
+            clearChaos();
+            activeEffect = 'particles';
+
+            for (let i = 0; i < 200; i++) {
+                particles.push({
+                    x: random(0, canvas.width),
+                    y: random(0, canvas.height),
+                    vx: random(-5, 5),
+                    vy: random(-5, 5),
+                    color: randomColor(),
+                    size: random(1, 4),
+                    life: random(50, 200)
+                });
+            }
+
+            function animate() {
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                particles.forEach((p, i) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+
+                    if (p.life <= 0) {
+                        particles[i] = {
+                            x: random(0, canvas.width),
+                            y: random(0, canvas.height),
+                            vx: random(-5, 5),
+                            vy: random(-5, 5),
+                            color: randomColor(),
+                            size: random(1, 4),
+                            life: random(50, 200)
+                        };
+                    }
+                });
+
+                animationId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Efecto 2: Caos Fractal
+        function startFractalChaos() {
+            clearChaos();
+            activeEffect = 'fractal';
+            time = 0;
+
+            function animate() {
+                ctx.fillStyle = 'rgba(0,0,0,0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                for (let i = 0; i < 100; i++) {
+                    const angle = (i * Math.PI * 2 / 100) + time * 0.01;
+                    const radius = 50 + Math.sin(time * 0.005 + i * 0.1) * 200;
+
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+
+                    const hue = (time + i * 10) % 360;
+                    ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+
+                    const size = 3 + Math.sin(time * 0.01 + i) * 2;
+                    ctx.fillRect(x, y, size, size);
+
+                    // Fractales secundarios
+                    for (let j = 0; j < 5; j++) {
+                        const subAngle = angle + j * Math.PI / 10;
+                        const subRadius = radius * 0.3;
+                        const subX = x + Math.cos(subAngle) * subRadius;
+                        const subY = y + Math.sin(subAngle) * subRadius;
+
+                        ctx.fillStyle = `hsl(${(hue + 180) % 360}, 100%, 50%)`;
+                        ctx.fillRect(subX, subY, 1, 1);
+                    }
+                }
+
+                time++;
+                animationId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Efecto 3: Lluvia Matrix
+        function startMatrixRain() {
+            clearChaos();
+            activeEffect = 'matrix';
+
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()';
+            const drops = [];
+
+            for (let i = 0; i < canvas.width / 10; i++) {
+                drops.push({
+                    x: i * 10,
+                    y: random(-500, 0),
+                    speed: random(2, 8),
+                    char: chars[Math.floor(random(0, chars.length))]
+                });
+            }
+
+            function animate() {
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.font = '12px monospace';
+
+                drops.forEach(drop => {
+                    drop.y += drop.speed;
+
+                    if (Math.random() < 0.05) {
+                        drop.char = chars[Math.floor(random(0, chars.length))];
+                    }
+
+                    const hue = (drop.y + time) % 360;
+                    ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                    ctx.fillText(drop.char, drop.x, drop.y);
+
+                    if (drop.y > canvas.height) {
+                        drop.y = random(-200, 0);
+                        drop.speed = random(2, 8);
+                    }
+                });
+
+                time++;
+                animationId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Efecto 4: Ondas Psicodélicas
+        function startPsychedelicWaves() {
+            clearChaos();
+            activeEffect = 'waves';
+            time = 0;
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                for (let x = 0; x < canvas.width; x += 5) {
+                    for (let y = 0; y < canvas.height; y += 5) {
+                        const wave1 = Math.sin((x + time) * 0.01) * 50;
+                        const wave2 = Math.sin((y + time) * 0.02) * 50;
+                        const wave3 = Math.sin((x + y + time) * 0.005) * 100;
+
+                        const intensity = (wave1 + wave2 + wave3) / 3;
+                        const hue = (intensity + time * 2) % 360;
+
+                        ctx.fillStyle = `hsl(${hue}, 100%, ${50 + intensity * 0.5}%)`;
+                        ctx.fillRect(x, y, 5, 5);
+                    }
+                }
+
+                time += 3;
+                animationId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Efecto 5: Arte Glitch
+        function startGlitchArt() {
+            clearChaos();
+            activeEffect = 'glitch';
+
+            function animate() {
+                // Glitch de colores
+                for (let i = 0; i < 20; i++) {
+                    const x = random(0, canvas.width - 100);
+                    const y = random(0, canvas.height - 20);
+                    const w = random(50, 200);
+                    const h = random(10, 50);
+
+                    ctx.fillStyle = randomColor();
+                    ctx.fillRect(x, y, w, h);
+                }
+
+                // Líneas glitch
+                for (let i = 0; i < 10; i++) {
+                    ctx.strokeStyle = randomColor();
+                    ctx.lineWidth = random(1, 5);
+                    ctx.beginPath();
+                    ctx.moveTo(random(0, canvas.width), random(0, canvas.height));
+                    ctx.lineTo(random(0, canvas.width), random(0, canvas.height));
+                    ctx.stroke();
+                }
+
+                // Texto glitch
+                if (Math.random() < 0.3) {
+                    const glitchDiv = document.createElement('div');
+                    glitchDiv.className = 'glitch-text';
+                    glitchDiv.style.left = random(0, canvas.width - 100) + 'px';
+                    glitchDiv.style.top = random(0, canvas.height - 20) + 'px';
+                    glitchDiv.style.color = randomColor();
+                    glitchDiv.textContent = 'ERROR_' + Math.random().toString(36).substr(2, 5);
+                    document.body.appendChild(glitchDiv);
+
+                    setTimeout(() => glitchDiv.remove(), 1000);
+                }
+
+                setTimeout(() => {
+                    if (activeEffect === 'glitch') {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        animationId = requestAnimationFrame(animate);
+                    }
+                }, 100);
+            }
+            animate();
+        }
+
+        // Efecto 6: Espiral Neón
+        function startNeonSpiral() {
+            clearChaos();
+            activeEffect = 'spiral';
+            time = 0;
+
+            function animate() {
+                ctx.fillStyle = 'rgba(0,0,0,0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+
+                for (let i = 0; i < 500; i++) {
+                    const angle = i * 0.1 + time * 0.02;
+                    const radius = i * 0.5 + Math.sin(time * 0.01) * 50;
+
+                    const x = centerX + Math.cos(angle) * radius;
+                    const y = centerY + Math.sin(angle) * radius;
+
+                    const hue = (i + time) % 360;
+                    const brightness = 50 + Math.sin(time * 0.01 + i * 0.1) * 50;
+
+                    ctx.fillStyle = `hsl(${hue}, 100%, ${brightness}%)`;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+
+                    ctx.fillRect(x, y, 3, 3);
+                }
+
+                ctx.shadowBlur = 0;
+                time++;
+                animationId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Redimensionar canvas
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Iniciar con efecto por defecto
+        startPsychedelicWaves();
+    </script>
+</body>
+
+</html>
